@@ -1,7 +1,15 @@
 import { Router } from "express";
 import Joi from "joi";
-import { CcreateAdmin, CdeleteAdmin, Clogin, CupdateAdmin } from "../controllers/auth.controller";
+import {
+  CcreateAdmin,
+  CdeleteAdmin,
+  Clogin,
+  CupdateAdmin,
+  CGetAllAdmins,
+  CGetAdminById,
+} from "../controllers/auth.controller";
 import { MValidate } from "../middlewares/validate.middleware";
+import { MAuthenticate } from "../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -19,9 +27,19 @@ const updateAdminSchema = Joi.object({
   name: Joi.string().optional(),
 });
 
+// Public routes
 router.post("/login", Clogin);
-router.post("/create", MValidate(createAdminSchema), CcreateAdmin);
-router.put("/:id", MValidate(updateAdminSchema), CupdateAdmin);
-router.delete("/:id", CdeleteAdmin);
+
+// Protected routes
+router.get("/", MAuthenticate, CGetAllAdmins);
+router.get("/:id", MAuthenticate, CGetAdminById);
+router.post(
+  "/create",
+  MAuthenticate,
+  MValidate(createAdminSchema),
+  CcreateAdmin
+);
+router.put("/:id", MAuthenticate, MValidate(updateAdminSchema), CupdateAdmin);
+router.delete("/:id", MAuthenticate, CdeleteAdmin);
 
 export default router;

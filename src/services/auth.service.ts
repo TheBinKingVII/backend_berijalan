@@ -1,11 +1,17 @@
 import { PrismaClient } from "../generated/prisma";
 import bcrypt from "bcrypt";
-import { IAdminResponse, IGlobalResponse } from "../interfaces/global.interface";
+import {
+  IAdminResponse,
+  IGlobalResponse,
+} from "../interfaces/global.interface";
 import { ILoginResponse } from "../interfaces/global.interface";
 
 const prisma = new PrismaClient();
 
-export const Slogin = async (usernameOrEmail: string, password: string): Promise<IGlobalResponse<ILoginResponse>> => {
+export const Slogin = async (
+  usernameOrEmail: string,
+  password: string
+): Promise<IGlobalResponse<ILoginResponse>> => {
   const admin = await prisma.admin.findFirst({
     where: {
       OR: [
@@ -52,7 +58,12 @@ export const Slogin = async (usernameOrEmail: string, password: string): Promise
   };
 };
 
-export const ScreateAdmin = async (username: string, password: string, email: string, name: string): Promise<IGlobalResponse<IAdminResponse>> => {
+export const ScreateAdmin = async (
+  username: string,
+  password: string,
+  email: string,
+  name: string
+): Promise<IGlobalResponse<IAdminResponse>> => {
   const passwordHash = await bcrypt.hash(password, 10);
 
   const admin = await prisma.admin.create({
@@ -67,11 +78,22 @@ export const ScreateAdmin = async (username: string, password: string, email: st
   return {
     status: true,
     message: "Admin created",
-    data: { id: admin.id, username: admin.username, email: admin.email, name: admin.name },
+    data: {
+      id: admin.id,
+      username: admin.username,
+      email: admin.email,
+      name: admin.name,
+    },
   };
 };
 
-export const SupdateAdmin = async (id: string, username: string, password: string, email: string, name: string): Promise<IGlobalResponse<IAdminResponse>> => {
+export const SupdateAdmin = async (
+  id: string,
+  username: string,
+  password: string,
+  email: string,
+  name: string
+): Promise<IGlobalResponse<IAdminResponse>> => {
   const passwordHash = await bcrypt.hash(password, 10);
 
   const admin = await prisma.admin.update({
@@ -82,11 +104,18 @@ export const SupdateAdmin = async (id: string, username: string, password: strin
   return {
     status: true,
     message: "Admin updated",
-    data: { id: admin.id, username: admin.username, email: admin.email, name: admin.name },
+    data: {
+      id: admin.id,
+      username: admin.username,
+      email: admin.email,
+      name: admin.name,
+    },
   };
 };
 
-export const SdeleteAdmin = async (id: string): Promise<IGlobalResponse<{ message: string }>> => {
+export const SdeleteAdmin = async (
+  id: string
+): Promise<IGlobalResponse<{ message: string }>> => {
   await prisma.admin.delete({
     where: { id: parseInt(id) },
   });
@@ -94,5 +123,59 @@ export const SdeleteAdmin = async (id: string): Promise<IGlobalResponse<{ messag
   return {
     status: true,
     message: "Admin deleted",
+  };
+};
+
+export const SGetAllAdmins = async (): Promise<IGlobalResponse> => {
+  const admins = await prisma.admin.findMany({
+    where: {
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      name: true,
+      isActive: true,
+      updatedAt: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+  return {
+    status: true,
+    message: "Admins retrieved successfully",
+    data: admins,
+  };
+};
+
+export const SGetAdminById = async (
+  id: string
+): Promise<IGlobalResponse<IAdminResponse>> => {
+  const admin = await prisma.admin.findFirst({
+    where: {
+      id: parseInt(id),
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      name: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  if (!admin) {
+    throw Error("Admin not found");
+  }
+
+  return {
+    status: true,
+    message: "Admin retrieved successfully",
+    data: admin,
   };
 };
